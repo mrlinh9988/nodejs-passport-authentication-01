@@ -48,8 +48,6 @@ router.post('/register', (req, res, next) => {
             password2
         })
     } else {
-        res.send('pass')
-
         User.findOne({ email: email })
             .then(user => {
                 if (user) {
@@ -64,12 +62,26 @@ router.post('/register', (req, res, next) => {
                         password2
                     })
                 } else {
-                    User.create({
-                        name: name,
-                        email: email,
-                        
+
+                    // Hash password 
+                    bcrypt.genSalt(10, (err, salt) => {
+                        if (err) throw err;
+
+                        bcrypt.hash(password, salt, (err1, hashPassword) => {
+                            if (err1) throw err1;
+
+                            User.create({ name, email, password: hashPassword })
+                                .then(user => {
+                                    req.flash(
+                                        'success_msg',
+                                        'You are now registered and can login'
+                                    )
+                                    res.redirect('/users/login')
+                                })
+                                .catch(err => console.log(err))
+                        })
                     })
-                }   
+                }
             })
             .catch(err => console.log(err))
         // User.create({
